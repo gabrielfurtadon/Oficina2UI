@@ -3,6 +3,7 @@ import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 
 const RegisterPage = ({ onSwitch }) => {
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -21,35 +22,112 @@ const RegisterPage = ({ onSwitch }) => {
     return regex.test(password);
   };
 
+  const validateFields = () => {
+    let newErrors = {};
+
+    if (!formData.name) {
+      newErrors.name = "Campo obrigatório";
+    }
+
+    if (!formData.email) {
+      newErrors.email = "Campo obrigatório";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Informe um e-mail válido pertencente à @utfpr.edu.br";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Campo obrigatório";
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password =
+        "A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.";
+    }
+
+    
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Campo obrigatório";
+    } else if (formData.confirmPassword !== formData.password) {
+      newErrors.confirmPassword = "As senhas não coincidem";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    let newErrors = { ...errors };
-    if (name === "email" && !validateEmail(value)) {
-      newErrors.email = "Informe um e-mail válido pertencente à @utfpr.edu.br";
-    } else {
-      delete newErrors.email;
-    }
-    if (name === "password" && !validatePassword(value)) {
-      newErrors.password =
-        "A senha deve conter no mínimo 8 caracteres, letras minúsculas, maiúscula, números e caracteres especiais.";
-    } else {
-      delete newErrors.password;
-    }
-    if (name === "confirmPassword" && value !== formData.password) {
-      newErrors.confirmPassword = "As senhas não coincidem";
-    } else {
-      delete newErrors.confirmPassword;
-    }
-    setErrors(newErrors);
+   
+    setErrors((prevErrors) => {
+      const updatedErrors = { ...prevErrors };
+
+      if (name === "name") {
+        updatedErrors.name = value ? "" : "Campo obrigatório";
+      }
+
+      if (name === "email") {
+        if (!value) {
+          updatedErrors.email = "Campo obrigatório";
+        } else if (!validateEmail(value)) {
+          updatedErrors.email = "Informe um e-mail válido pertencente à @utfpr.edu.br";
+        } else {
+          delete updatedErrors.email;
+        }
+      }
+
+      if (name === "password") {
+        if (!value) {
+          updatedErrors.password = "Campo obrigatório";
+        } else if (!validatePassword(value)) {
+          updatedErrors.password =
+            "A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.";
+        } else {
+          delete updatedErrors.password;
+        }
+      }
+
+      if (name === "confirmPassword") {
+        if (!value) {
+          updatedErrors.confirmPassword = "Campo obrigatório";
+        } else if (value !== formData.password) {
+          updatedErrors.confirmPassword = "As senhas não coincidem";
+        } else {
+          delete updatedErrors.confirmPassword;
+        }
+      }
+
+      return updatedErrors;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateFields()) {
+      return; 
+    }
+
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setLoading(false);
+    try {
+      const response = await fetch("http://localhost:8080/instrutor/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao cadastrar");
+      }
+
+      const data = await response.json();
+      onSwitch(); 
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,6 +139,25 @@ const RegisterPage = ({ onSwitch }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Nome
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              className={`mt-1 block w-full px-3 py-2 border ${
+                errors.name ? "border-red-500" : "border-gray-300"
+              } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFBE00]`}
+              placeholder="Seu nome completo"
+              aria-label="Nome"
+            />
+            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -136,7 +233,7 @@ const RegisterPage = ({ onSwitch }) => {
             disabled={loading || Object.keys(errors).length > 0}
             className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#FFBE00] hover:bg-[#e5ab00] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <FaSpinner className="animate-spin mx-auto h-5 w-5" /> : "Register"}
+            {loading ? <FaSpinner className="animate-spin mx-auto h-5 w-5" /> : "Registrar"}
           </button>
         </form>
 

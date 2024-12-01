@@ -12,24 +12,61 @@ const LoginPage = ({ onSwitch }) => {
     return regex.test(email);
   };
 
+  const validateFields = () => {
+    let newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = "Campo obrigatório";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Informe um e-mail válido pertencente à @utfpr.edu.br";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Campo obrigatório";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    let newErrors = { ...errors };
-    if (name === "email" && !validateEmail(value)) {
-      newErrors.email = "Informe um e-mail válido pertencente à @utfpr.edu.br";
-    } else {
-      delete newErrors.email;
-    }
-    setErrors(newErrors);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: value ? "" : "Campo obrigatório",
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateFields()) {
+      return;
+    }
+
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setLoading(false);
+    try {
+      const response = await fetch("http://localhost:8080/instrutor/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Falha no login");
+      }
+
+      const data = await response.json();
+
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,8 +108,10 @@ const LoginPage = ({ onSwitch }) => {
                 id="password"
                 name="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFBE00]"
+                onChange={handleInputChange}
+                className={`mt-1 block w-full px-3 py-2 border ${
+                  errors.password ? "border-red-500" : "border-gray-300"
+                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFBE00]`}
                 aria-label="Password"
                 autoComplete="current-password"
               />
@@ -85,11 +124,12 @@ const LoginPage = ({ onSwitch }) => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
           </div>
 
           <button
             type="submit"
-            disabled={loading || errors.email}
+            disabled={loading || Object.keys(errors).length > 0}
             className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#FFBE00] hover:bg-[#e5ab00] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <FaSpinner className="animate-spin mx-auto h-5 w-5" /> : "Entrar"}
