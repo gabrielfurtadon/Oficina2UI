@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = ({ onSwitch }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   const validateEmail = (email) => {
     const regex = /^[A-Z0-9._%+-]+@utfpr\.edu\.br$/i;
@@ -61,6 +63,8 @@ const LoginPage = ({ onSwitch }) => {
       }
 
       const data = await response.json();
+
+      navigate("/homepage");
 
     } catch (error) {
       alert(error.message);
