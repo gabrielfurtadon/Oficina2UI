@@ -42,7 +42,6 @@ const RegisterPage = ({ onSwitch }) => {
         "A senha deve conter no mínimo 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.";
     }
 
-    
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Campo obrigatório";
     } else if (formData.confirmPassword !== formData.password) {
@@ -57,12 +56,15 @@ const RegisterPage = ({ onSwitch }) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-   
     setErrors((prevErrors) => {
       const updatedErrors = { ...prevErrors };
 
       if (name === "name") {
-        updatedErrors.name = value ? "" : "Campo obrigatório";
+        if (!value) {
+          updatedErrors.name = "Campo obrigatório";
+        } else {
+          delete updatedErrors.name;
+        }
       }
 
       if (name === "email") {
@@ -103,7 +105,7 @@ const RegisterPage = ({ onSwitch }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateFields()) {
-      return; 
+      return;
     }
 
     setLoading(true);
@@ -121,8 +123,7 @@ const RegisterPage = ({ onSwitch }) => {
         throw new Error(errorData.message || "Erro ao cadastrar");
       }
 
-      const data = await response.json();
-      onSwitch(); 
+      onSwitch();
     } catch (error) {
       alert(error.message);
     } finally {
@@ -230,7 +231,14 @@ const RegisterPage = ({ onSwitch }) => {
 
           <button
             type="submit"
-            disabled={loading || Object.keys(errors).length > 0}
+            disabled={
+              loading ||
+              Object.keys(errors).length > 0 ||
+              !formData.name ||
+              !formData.email ||
+              !formData.password ||
+              !formData.confirmPassword
+            }
             className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-[#FFBE00] hover:bg-[#e5ab00] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <FaSpinner className="animate-spin mx-auto h-5 w-5" /> : "Registrar"}
