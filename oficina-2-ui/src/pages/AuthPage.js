@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
-import Homepage from "./Homepage";
+import Homepage from "./HomePage";
 
 const AuthPage = () => {
   const [currentPage, setCurrentPage] = useState("login"); 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
+import AuthPage from "./AuthPage";
 
 const LoginPage = ({ onSwitch }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -37,7 +38,6 @@ const LoginPage = ({ onSwitch }) => {
     setErrors((prevErrors) => {
       const newErrors = { ...prevErrors };
 
-      // Revalida o campo de e-mail
       if (name === "email") {
         if (!value) {
           newErrors.email = "Campo obrigatório";
@@ -48,7 +48,6 @@ const LoginPage = ({ onSwitch }) => {
         }
       }
 
-      // Revalida o campo de senha
       if (name === "password") {
         if (!value) {
           newErrors.password = "Campo obrigatório";
@@ -84,7 +83,7 @@ const LoginPage = ({ onSwitch }) => {
 
       const data = await response.json();
 
-      onLoginSuccess();
+      AuthPage.onLoginSuccess();
     } catch (error) {
       alert(error.message);
     } finally {
