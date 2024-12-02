@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
-import AuthPage from "./AuthPage";
 
-const LoginPage = ({ onSwitch }) => {
+const LoginPage = ({ onSwitch, onLoginSuccess}) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -83,7 +82,7 @@ const LoginPage = ({ onSwitch }) => {
 
       const data = await response.json();
 
-      AuthPage.onLoginSuccess();
+      onLoginSuccess();
     } catch (error) {
       alert(error.message);
     } finally {
