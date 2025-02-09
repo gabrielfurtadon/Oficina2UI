@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaTimes, FaCheckSquare } from "react-icons/fa";
+import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaExclamationTriangle } from "react-icons/fa";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -13,6 +13,7 @@ const WorkshopsList = () => {
   const [participants, setParticipants] = useState([]);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [isManagingParticipants, setIsManagingParticipants] = useState(false);
+  const [error409, setError409] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/workshops`)
@@ -84,12 +85,21 @@ const WorkshopsList = () => {
   };
 
   const handleSaveParticipants = async () => {
+    const novosParticipantes = selectedParticipants.filter(ra => 
+      !editingWorkshop.participantes.some(p => p.ra === ra)
+    );
+
     try {
-      await fetch(`${API_BASE_URL}/workshops/participantes/${editingWorkshop.id}`, {
+      const response = await fetch(`${API_BASE_URL}/workshops/participantes/${editingWorkshop.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantes: selectedParticipants }),
+        body: JSON.stringify({ participantes: novosParticipantes }),
       });
+
+      if (response.status === 409) {
+        setError409(true);
+        return;
+      }
 
       setWorkshops(workshops.map(w =>
         w.id === editingWorkshop.id ? { ...w, participantes: participants.filter(p => selectedParticipants.includes(p.ra)) } : w
@@ -158,27 +168,15 @@ const WorkshopsList = () => {
         )}
       </div>
 
-      {isManagingParticipants && (
+      {error409 && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Gerenciar Participantes</h2>
-              <button onClick={() => setIsManagingParticipants(false)} className="text-gray-600 hover:text-gray-900">
-                <FaTimes />
-              </button>
-            </div>
-
-            <ul className="space-y-2 max-h-40 overflow-auto">
-              {participants.map((p) => (
-                <li key={p.ra} className="flex items-center space-x-2">
-                  <input type="checkbox" checked={selectedParticipants.includes(p.ra)} onChange={() => handleToggleParticipant(p.ra)} />
-                  <span>{p.name} (RA: {p.ra})</span>
-                </li>
-              ))}
-            </ul>
-
-            <button onClick={handleSaveParticipants} className="w-full py-2 bg-green-500 text-white rounded-md mt-4">
-              <FaCheckSquare className="mr-2" /> Salvar Alterações
+            <h2 className="text-xl font-bold text-red-600 flex items-center">
+              <FaExclamationTriangle className="mr-2" /> Erro ao adicionar participantes
+            </h2>
+            <p className="mt-2">O número máximo de participantes foi ultrapassado.</p>
+            <button onClick={() => setError409(false)} className="w-full py-2 bg-red-500 text-white rounded-md mt-4">
+              Fechar
             </button>
           </div>
         </div>
