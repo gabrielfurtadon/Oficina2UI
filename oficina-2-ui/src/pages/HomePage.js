@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FaUserPlus, FaChalkboardTeacher, FaCertificate } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
+  const navigate = useNavigate();
   const [activeButton, setActiveButton] = useState(null);
 
   const buttons = [
@@ -16,7 +18,8 @@ const Homepage = () => {
       id: 2,
       title: "Cadastrar Participantes",
       icon: <FaUserPlus className="text-3xl" />,
-      description: "Registre participantes para os workshops"
+      description: "Registre participantes para os workshops",
+      action: () => navigate("/cadastrar-participante"), 
     },
     {
       id: 3,
@@ -48,7 +51,7 @@ const Homepage = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`p-8 rounded-xl bg-white shadow-lg transform transition-all duration-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#FFBE00] focus:ring-opacity-50 ${activeButton === button.id ? "border-2 border-[#FFBE00]" : ""}`}
-              onClick={() => setActiveButton(button.id)}
+              onClick={button.action}
               aria-label={button.title}
             >
               <div className="flex flex-col items-center space-y-4">
