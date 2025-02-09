@@ -6,6 +6,7 @@ import RegisterParticipant from "../src/pages/RegisterParticipant";
 import ParticipantsList from "../src/pages/ParticipantsList";
 import CreateWorkshop from "./pages/CreateWorkshop";
 import WorkshopsList from "./pages/WorkshopsList";
+import Certificates from "./pages/Certificates";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/participantes" element={<ParticipantsList />} />
         <Route path="/cadastrar-workshop" element={<CreateWorkshop />} />
         <Route path="/workshops" element={<WorkshopsList />} />
+        <Route path="/acessar-certificados" element={<Certificates />} />
       </Routes>
     </Router>
   );
