@@ -106,17 +106,11 @@ const WorkshopsList = () => {
     }
   };
 
-  // Salva os participantes selecionados para o workshop
+  // Salva os participantes selecionados para o workshop, sobrescrevendo a formação anterior
   const handleSaveParticipants = async () => {
     if (!currentWorkshopForParticipants) return;
 
-    // Os participantes finais desejados serão exatamente os selecionados na modal
     const finalCount = selectedParticipants.length;
-
-    // Para não enviar participantes já existentes (mantidos) – evitando erro de duplicidade –
-    // filtramos para enviar APENAS os que são novos.
-    const existingRAs = currentWorkshopForParticipants.participantes.map((p) => p.ra);
-    const newRAs = selectedParticipants.filter((ra) => !existingRAs.includes(ra));
 
     try {
       const response = await fetch(
@@ -124,13 +118,11 @@ const WorkshopsList = () => {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          // Envia somente os RAs que não estão no workshop (novas adições).
-          body: JSON.stringify({ participantes: newRAs }),
+          // Envia todos os participantes escolhidos para o back, que deverá substituir os existentes
+          body: JSON.stringify({ participantes: selectedParticipants }),
         }
       );
 
-      // Se o número final de participantes ultrapassar o limite,
-      // a API retorna 409. Exibimos a mensagem informando quantos foram escolhidos versus o máximo.
       if (response.status === 409) {
         alert(
           `A escolha ultrapassa o limite de participantes: ${finalCount} (escolhidos) / ${currentWorkshopForParticipants.numeroMaxParticipantes}`
@@ -138,24 +130,17 @@ const WorkshopsList = () => {
         return;
       }
 
-      if (!response.ok)
-        throw new Error("Erro ao atualizar participantes");
+      if (!response.ok) throw new Error("Erro ao atualizar participantes");
 
-      // Após a atualização, o workshop deverá ficar com:
-      // • Os participantes que já estavam e foram mantidos (kept)
-      // • Mais os participantes novos que acabamos de adicionar (newRAs)
-      const keptParticipants = currentWorkshopForParticipants.participantes.filter((p) =>
+      // Atualiza localmente o workshop com a nova formação de participantes
+      const updatedParticipants = participantsList.filter((p) =>
         selectedParticipants.includes(p.ra)
-      );
-      const newParticipants = participantsList.filter((p) =>
-        newRAs.includes(p.ra)
       );
       const updatedWorkshop = {
         ...currentWorkshopForParticipants,
-        participantes: [...keptParticipants, ...newParticipants],
+        participantes: updatedParticipants,
       };
 
-      // Atualiza o workshop na listagem
       setWorkshops(
         workshops.map((w) =>
           w.id === updatedWorkshop.id ? updatedWorkshop : w
