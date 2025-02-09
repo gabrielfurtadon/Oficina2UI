@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUserPlus, FaList, FaSpinner } from "react-icons/fa";
 
@@ -6,7 +6,7 @@ const API_BASE_URL = "http://localhost:8080";
 
 const RegisterParticipant = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ fullName: "", ra: "" });
+  const [formData, setFormData] = useState({ name: "", ra: "" });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -23,9 +23,9 @@ const RegisterParticipant = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.fullName || !formData.ra) {
+    if (!formData.name || !formData.ra) {
       setErrors({
-        fullName: !formData.fullName ? "Campo obrigatório" : "",
+        name: !formData.name ? "Campo obrigatório" : "",
         ra: !formData.ra ? "Campo obrigatório" : "",
       });
       return;
@@ -45,7 +45,7 @@ const RegisterParticipant = () => {
         throw new Error(errorData.message || "Erro ao cadastrar");
       }
 
-      setFormData({ fullName: "", ra: "" });
+      setFormData({ name: "", ra: "" });
       alert("Participante cadastrado com sucesso!");
     } catch (error) {
       setErrors({ ra: error.message });
@@ -64,13 +64,13 @@ const RegisterParticipant = () => {
             <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
             <input
               type="text"
-              name="fullName"
-              value={formData.fullName}
+              name="name"
+              value={formData.name}
               onChange={handleInputChange}
               className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-[#FFBE00]"
               placeholder="Digite o nome completo"
             />
-            {errors.fullName && <p className="text-sm text-red-600">{errors.fullName}</p>}
+            {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
           </div>
 
           <div>

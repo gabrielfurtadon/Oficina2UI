@@ -34,8 +34,8 @@ const ParticipantsList = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!currentParticipant.fullName || !currentParticipant.ra) {
-      setErrors({ fullName: "Campo obrigatório", ra: "Campo obrigatório" });
+    if (!currentParticipant.name || !currentParticipant.ra) {
+      setErrors({ name: "Campo obrigatório", ra: "Campo obrigatório" });
       return;
     }
 
@@ -67,32 +67,33 @@ const ParticipantsList = () => {
   };
 
   return (
-    <div>
-      {/* Lista de participantes */}
-      <button onClick={() => navigate(-1)}>Voltar</button>
-      {participants.map((participant) => (
-        <div key={participant.ra}>
-          <p>{participant.fullName} - RA: {participant.ra}</p>
-          <button onClick={() => handleEdit(participant)}>Editar</button>
-          <button onClick={() => handleDelete(participant.ra)}>Excluir</button>
-        </div>
-      ))}
+    <div className="min-h-screen bg-[#f1f1f1] flex items-center justify-center px-4">
+      <div className="max-w-lg w-full bg-white rounded-xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-[#000000] mb-6">Participantes Cadastrados</h2>
 
-      {/* Modal de edição */}
-      {isEditing && (
-        <div>
-          <input
-            value={currentParticipant.fullName}
-            onChange={(e) => setCurrentParticipant({ ...currentParticipant, fullName: e.target.value })}
-          />
-          <input
-            value={currentParticipant.ra}
-            onChange={(e) => setCurrentParticipant({ ...currentParticipant, ra: e.target.value })}
-          />
-          <button onClick={handleSaveEdit}>Salvar</button>
-          <button onClick={() => setIsEditing(false)}>Cancelar</button>
-        </div>
-      )}
+        {participants.length === 0 ? (
+          <p className="text-gray-600 text-center">Nenhum participante cadastrado.</p>
+        ) : (
+          <ul className="space-y-4">
+            {participants.map((participant) => (
+              <li key={participant.ra} className="flex justify-between items-center p-4 bg-gray-100 rounded-md shadow-sm">
+                <div>
+                  <p className="text-lg font-semibold">{participant.name}</p>
+                  <p className="text-sm text-gray-600">RA: {participant.ra}</p>
+                </div>
+                <div className="flex space-x-3">
+                  <button onClick={() => handleEdit(participant)} className="text-blue-600 hover:text-blue-800">
+                    <FaEdit />
+                  </button>
+                  <button onClick={() => handleDelete(participant.ra)} className="text-red-600 hover:text-red-800">
+                    <FaTrash />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
