@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaExclamationTriangle } from "react-icons/fa";
+import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaTimes, FaCheckSquare, FaExclamationTriangle } from "react-icons/fa";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -168,16 +168,12 @@ const WorkshopsList = () => {
         )}
       </div>
 
-      {error409 && (
+      {isEditing && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-red-600 flex items-center">
-              <FaExclamationTriangle className="mr-2" /> Erro ao adicionar participantes
-            </h2>
-            <p className="mt-2">O número máximo de participantes foi ultrapassado.</p>
-            <button onClick={() => setError409(false)} className="w-full py-2 bg-red-500 text-white rounded-md mt-4">
-              Fechar
-            </button>
+            <h2 className="text-xl font-bold">Editar Workshop</h2>
+            <input type="text" value={editingWorkshop.titulo} onChange={handleInputChange} name="titulo" className="block w-full p-2 border rounded-md mt-2" />
+            <button onClick={handleSaveEdit} className="w-full py-2 bg-blue-500 text-white rounded-md mt-4">Salvar</button>
           </div>
         </div>
       )}
