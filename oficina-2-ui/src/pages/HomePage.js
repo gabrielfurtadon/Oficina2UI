@@ -26,7 +26,8 @@ const Homepage = () => {
       id: 3,
       title: "Geração de Certificados por Workshop",
       icon: <FaCertificate className="text-3xl" />,
-      description: "Emita certificados para os participantes dos workshops"
+      description: "Emita certificados para os participantes dos workshops",
+      action: () => navigate("/acessar-certificados"), 
     },
     {
       id: 4,
