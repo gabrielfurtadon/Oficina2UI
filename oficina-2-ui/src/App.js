@@ -5,6 +5,7 @@ import Homepage from "../src/pages/HomePage";
 import RegisterParticipant from "../src/pages/RegisterParticipant";
 import ParticipantsList from "../src/pages/ParticipantsList";
 import CreateWorkshop from "./pages/CreateWorkshop";
+import WorkshopsList from "./pages/WorkshopsList";
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/cadastrar-participante" element={<RegisterParticipant />} />
         <Route path="/participantes" element={<ParticipantsList />} />
         <Route path="/cadastrar-workshop" element={<CreateWorkshop />} />
+        <Route path="/workshops" element={<WorkshopsList />} />
       </Routes>
     </Router>
   );

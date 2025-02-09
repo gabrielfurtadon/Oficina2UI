@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FaUserPlus, FaChalkboardTeacher, FaCertificate } from "react-icons/fa";
+import { FaUserPlus, FaChalkboardTeacher, FaCertificate, FaTasks } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
@@ -26,7 +26,14 @@ const Homepage = () => {
       id: 3,
       title: "Geração de Certificados por Workshop",
       icon: <FaCertificate className="text-3xl" />,
-      description: "Emita certificados para os participantes"
+      description: "Emita certificados para os participantes dos workshops"
+    },
+    {
+      id: 4,
+      title: "Gerencie Workshops",
+      icon: <FaTasks className="text-3xl" />,
+      description: "Edite, exclua e adicione participantes aos workshops cadastrados",
+      action: () => navigate("/workshops"), 
     }
   ];
 
