@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaTimes, FaCheckSquare } from "react-icons/fa";
+import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaTimes, FaCheckSquare, FaSearch } from "react-icons/fa";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -8,10 +8,10 @@ const WorkshopsList = () => {
   const navigate = useNavigate();
   const [workshops, setWorkshops] = useState([]);
   const [expandedWorkshop, setExpandedWorkshop] = useState(null);
-  const [editingWorkshop, setEditingWorkshop] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [isManagingParticipants, setIsManagingParticipants] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/workshops`)
@@ -22,32 +22,6 @@ const WorkshopsList = () => {
 
   const handleExpand = (id) => {
     setExpandedWorkshop(expandedWorkshop === id ? null : id);
-  };
-
-  const handleEditClick = (workshop) => {
-    setEditingWorkshop({ ...workshop });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditingWorkshop({ ...editingWorkshop, [name]: value });
-  };
-
-  const handleSaveEdit = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/workshops/${editingWorkshop.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingWorkshop),
-      });
-
-      if (!response.ok) throw new Error("Erro ao atualizar workshop");
-
-      setWorkshops(workshops.map(w => w.id === editingWorkshop.id ? editingWorkshop : w));
-      setEditingWorkshop(null);
-    } catch {
-      alert("Erro ao atualizar workshop");
-    }
   };
 
   const handleDelete = async (id) => {
@@ -63,12 +37,12 @@ const WorkshopsList = () => {
 
   const handleManageParticipants = async (workshop) => {
     setIsManagingParticipants(true);
-    setEditingWorkshop(workshop);
 
     try {
       const response = await fetch(`${API_BASE_URL}/participantes`);
       const data = await response.json();
-      setParticipants(data);
+      const sortedParticipants = data.sort((a, b) => a.name.localeCompare(b.name));
+      setParticipants(sortedParticipants);
       setSelectedParticipants(workshop.participantes.map(p => p.ra));
     } catch {
       alert("Erro ao carregar participantes");
@@ -81,16 +55,16 @@ const WorkshopsList = () => {
     );
   };
 
-  const handleSaveParticipants = async () => {
+  const handleSaveParticipants = async (workshopId) => {
     try {
-      await fetch(`${API_BASE_URL}/workshops/${editingWorkshop.id}/participantes`, {
+      await fetch(`${API_BASE_URL}/workshops/participantes/${workshopId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ participantes: selectedParticipants }),
       });
 
       setWorkshops(workshops.map(w =>
-        w.id === editingWorkshop.id ? { ...w, participantes: participants.filter(p => selectedParticipants.includes(p.ra)) } : w
+        w.id === workshopId ? { ...w, participantes: participants.filter(p => selectedParticipants.includes(p.ra)) } : w
       ));
 
       setIsManagingParticipants(false);
@@ -114,30 +88,19 @@ const WorkshopsList = () => {
           <ul className="space-y-4 mt-6">
             {workshops.map((workshop) => (
               <li key={workshop.id} className="p-4 bg-gray-100 rounded-md">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">{workshop.titulo}</h3>
-                  <div className="flex space-x-2">
-                    <button onClick={() => handleEditClick(workshop)} className="text-blue-600 hover:text-blue-800">
-                      <FaEdit />
-                    </button>
-                    <button onClick={() => handleDelete(workshop.id)} className="text-red-600 hover:text-red-800">
-                      <FaTrash />
-                    </button>
-                    <button onClick={() => handleManageParticipants(workshop)} className="text-green-600 hover:text-green-800">
-                      <FaUsers />
-                    </button>
-                    <button onClick={() => handleExpand(workshop.id)} className="text-gray-600 hover:text-gray-800">
-                      <FaChevronDown />
-                    </button>
-                  </div>
-                </div>
+                <h3 className="text-lg font-semibold">{workshop.titulo}</h3>
+                <p><strong>Descrição:</strong> {workshop.descricao || "Sem descrição"}</p>
+                <p><strong>Data:</strong> {workshop.data}</p>
+                <p><strong>Duração:</strong> {workshop.duracao} horas</p>
+                <p><strong>Número máximo de participantes:</strong> {workshop.numeroMaxParticipantes}</p>
+                <p><strong>Tipo:</strong> {workshop.tipoEvento}</p>
+
+                <button onClick={() => handleExpand(workshop.id)} className="mt-2 text-blue-600 flex items-center">
+                  {expandedWorkshop === workshop.id ? <FaChevronUp /> : <FaChevronDown />} Participantes
+                </button>
 
                 {expandedWorkshop === workshop.id && (
                   <div className="mt-2 text-sm">
-                    <p><strong>Data:</strong> {workshop.data}</p>
-                    <p><strong>Duração:</strong> {workshop.duracao} horas</p>
-                    <p><strong>Tipo:</strong> {workshop.tipoEvento}</p>
-                    <p><strong>Participantes:</strong></p>
                     {workshop.participantes.length > 0 ? (
                       <ul className="list-disc ml-4">
                         {workshop.participantes.map((p) => (
@@ -149,6 +112,10 @@ const WorkshopsList = () => {
                     )}
                   </div>
                 )}
+
+                <button onClick={() => handleManageParticipants(workshop)} className="mt-3 w-full py-2 bg-green-500 text-white rounded-md">
+                  <FaUsers className="mr-2 inline" /> Gerenciar Participantes
+                </button>
               </li>
             ))}
           </ul>
@@ -165,16 +132,29 @@ const WorkshopsList = () => {
               </button>
             </div>
 
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="Buscar participante..."
+                className="w-full p-2 border rounded-md pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <FaSearch className="absolute left-2 top-3 text-gray-500" />
+            </div>
+
             <ul className="space-y-2 max-h-40 overflow-auto">
-              {participants.map((p) => (
-                <li key={p.ra} className="flex items-center space-x-2">
-                  <input type="checkbox" checked={selectedParticipants.includes(p.ra)} onChange={() => handleToggleParticipant(p.ra)} />
-                  <span>{p.name} (RA: {p.ra})</span>
-                </li>
-              ))}
+              {participants
+                .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                .map((p) => (
+                  <li key={p.ra} className="flex items-center space-x-2">
+                    <input type="checkbox" checked={selectedParticipants.includes(p.ra)} onChange={() => handleToggleParticipant(p.ra)} />
+                    <span>{p.name} (RA: {p.ra})</span>
+                  </li>
+                ))}
             </ul>
 
-            <button onClick={handleSaveParticipants} className="w-full py-2 bg-green-500 text-white rounded-md mt-4">
+            <button onClick={() => handleSaveParticipants()} className="w-full py-2 bg-green-500 text-white rounded-md mt-4">
               <FaCheckSquare className="mr-2" /> Salvar Alterações
             </button>
           </div>
