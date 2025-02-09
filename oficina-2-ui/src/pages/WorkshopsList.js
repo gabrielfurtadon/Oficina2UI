@@ -19,7 +19,6 @@ const WorkshopsList = () => {
   const [editingWorkshop, setEditingWorkshop] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Estados para a modal de gerenciamento de participantes
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [participantsList, setParticipantsList] = useState([]);
   const [selectedParticipants, setSelectedParticipants] = useState([]);
@@ -81,14 +80,11 @@ const WorkshopsList = () => {
     }
   };
 
-  // Abre a modal de participantes para o workshop selecionado
   const openParticipantsModal = (workshop) => {
     setCurrentWorkshopForParticipants(workshop);
-    // Inicializa os participantes selecionados com os que já estão no workshop
     const initialSelected = workshop.participantes.map((p) => p.ra);
     setSelectedParticipants(initialSelected);
 
-    // Busca a lista de participantes cadastrados
     fetch(`${API_BASE_URL}/participantes`)
       .then((res) => res.json())
       .then((data) => setParticipantsList(data))
@@ -97,7 +93,6 @@ const WorkshopsList = () => {
     setShowParticipantsModal(true);
   };
 
-  // Alterna a seleção de um participante (pelo seu RA)
   const handleToggleParticipant = (ra) => {
     if (selectedParticipants.includes(ra)) {
       setSelectedParticipants(selectedParticipants.filter((item) => item !== ra));
