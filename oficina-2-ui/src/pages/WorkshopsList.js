@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaTimes, FaCheckSquare, FaSearch } from "react-icons/fa";
+import { FaArrowLeft, FaEdit, FaTrash, FaUsers, FaChevronDown, FaChevronUp, FaTimes, FaCheckSquare } from "react-icons/fa";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -8,10 +8,8 @@ const WorkshopsList = () => {
   const navigate = useNavigate();
   const [workshops, setWorkshops] = useState([]);
   const [expandedWorkshop, setExpandedWorkshop] = useState(null);
-  const [participants, setParticipants] = useState([]);
-  const [selectedParticipants, setSelectedParticipants] = useState([]);
-  const [isManagingParticipants, setIsManagingParticipants] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [editingWorkshop, setEditingWorkshop] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/workshops`)
@@ -24,6 +22,33 @@ const WorkshopsList = () => {
     setExpandedWorkshop(expandedWorkshop === id ? null : id);
   };
 
+  const handleEditClick = (workshop) => {
+    setEditingWorkshop({ ...workshop });
+    setIsEditing(true);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingWorkshop({ ...editingWorkshop, [name]: value });
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/workshops/${editingWorkshop.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingWorkshop),
+      });
+
+      if (!response.ok) throw new Error("Erro ao atualizar workshop");
+
+      setWorkshops(workshops.map(w => w.id === editingWorkshop.id ? editingWorkshop : w));
+      setIsEditing(false);
+    } catch {
+      alert("Erro ao atualizar workshop");
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir este workshop?")) return;
 
@@ -32,44 +57,6 @@ const WorkshopsList = () => {
       setWorkshops(workshops.filter(w => w.id !== id));
     } catch {
       alert("Erro ao excluir workshop");
-    }
-  };
-
-  const handleManageParticipants = async (workshop) => {
-    setIsManagingParticipants(true);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/participantes`);
-      const data = await response.json();
-      const sortedParticipants = data.sort((a, b) => a.name.localeCompare(b.name));
-      setParticipants(sortedParticipants);
-      setSelectedParticipants(workshop.participantes.map(p => p.ra));
-    } catch {
-      alert("Erro ao carregar participantes");
-    }
-  };
-
-  const handleToggleParticipant = (ra) => {
-    setSelectedParticipants(prev =>
-      prev.includes(ra) ? prev.filter(p => p !== ra) : [...prev, ra]
-    );
-  };
-
-  const handleSaveParticipants = async (workshopId) => {
-    try {
-      await fetch(`${API_BASE_URL}/workshops/participantes/${workshopId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantes: selectedParticipants }),
-      });
-
-      setWorkshops(workshops.map(w =>
-        w.id === workshopId ? { ...w, participantes: participants.filter(p => selectedParticipants.includes(p.ra)) } : w
-      ));
-
-      setIsManagingParticipants(false);
-    } catch {
-      alert("Erro ao atualizar participantes");
     }
   };
 
@@ -113,50 +100,89 @@ const WorkshopsList = () => {
                   </div>
                 )}
 
-                <button onClick={() => handleManageParticipants(workshop)} className="mt-3 w-full py-2 bg-green-500 text-white rounded-md">
-                  <FaUsers className="mr-2 inline" /> Gerenciar Participantes
-                </button>
+                <div className="flex space-x-2 mt-3">
+                  <button onClick={() => handleEditClick(workshop)} className="text-blue-600 hover:text-blue-800">
+                    <FaEdit />
+                  </button>
+                  <button onClick={() => handleDelete(workshop.id)} className="text-red-600 hover:text-red-800">
+                    <FaTrash />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      {isManagingParticipants && (
+      {isEditing && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Gerenciar Participantes</h2>
-              <button onClick={() => setIsManagingParticipants(false)} className="text-gray-600 hover:text-gray-900">
+              <h2 className="text-xl font-bold">Editar Workshop</h2>
+              <button onClick={() => setIsEditing(false)} className="text-gray-600 hover:text-gray-900">
                 <FaTimes />
               </button>
             </div>
 
-            <div className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Buscar participante..."
-                className="w-full p-2 border rounded-md pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <FaSearch className="absolute left-2 top-3 text-gray-500" />
-            </div>
+            <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Título</label>
+                <input
+                  type="text"
+                  name="titulo"
+                  value={editingWorkshop.titulo}
+                  onChange={handleInputChange}
+                  className="block w-full p-2 border rounded-md"
+                />
+              </div>
 
-            <ul className="space-y-2 max-h-40 overflow-auto">
-              {participants
-                .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map((p) => (
-                  <li key={p.ra} className="flex items-center space-x-2">
-                    <input type="checkbox" checked={selectedParticipants.includes(p.ra)} onChange={() => handleToggleParticipant(p.ra)} />
-                    <span>{p.name} (RA: {p.ra})</span>
-                  </li>
-                ))}
-            </ul>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea
+                  name="descricao"
+                  value={editingWorkshop.descricao}
+                  onChange={handleInputChange}
+                  className="block w-full p-2 border rounded-md"
+                />
+              </div>
 
-            <button onClick={() => handleSaveParticipants()} className="w-full py-2 bg-green-500 text-white rounded-md mt-4">
-              <FaCheckSquare className="mr-2" /> Salvar Alterações
-            </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Data</label>
+                <input
+                  type="date"
+                  name="data"
+                  value={editingWorkshop.data}
+                  onChange={handleInputChange}
+                  className="block w-full p-2 border rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Duração (horas)</label>
+                <input
+                  type="number"
+                  name="duracao"
+                  value={editingWorkshop.duracao}
+                  onChange={handleInputChange}
+                  className="block w-full p-2 border rounded-md"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Número máximo de participantes</label>
+                <input
+                  type="number"
+                  name="numeroMaxParticipantes"
+                  value={editingWorkshop.numeroMaxParticipantes}
+                  onChange={handleInputChange}
+                  className="block w-full p-2 border rounded-md"
+                />
+              </div>
+
+              <button type="button" onClick={handleSaveEdit} className="w-full py-2 bg-[#FFBE00] text-white rounded-md">
+                Salvar
+              </button>
+            </form>
           </div>
         </div>
       )}
