@@ -8,7 +8,7 @@ const ParticipantsList = () => {
   const navigate = useNavigate();
   const [participants, setParticipants] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentParticipant, setCurrentParticipant] = useState({ name: "", ra: "" });
+  const [currentParticipant, setCurrentParticipant] = useState({ id: "", name: "", ra: "" });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -39,12 +39,9 @@ const ParticipantsList = () => {
       return;
     }
 
-    if (
-      participants.some(
-        (p) => p.ra === currentParticipant.ra && p.ra !== currentParticipant.ra
-      )
-    ) {
-      setErrors({ ra: "Este RA já está cadastrado!" });
+    const existingRA = participants.find((p) => p.ra === currentParticipant.ra && p.id !== currentParticipant.id);
+    if (existingRA) {
+      setErrors({ ra: `O RA "${currentParticipant.ra}" já está cadastrado para outro participante.` });
       return;
     }
 
@@ -57,7 +54,7 @@ const ParticipantsList = () => {
 
       setParticipants(
         participants.map((p) =>
-          p.ra === currentParticipant.ra ? currentParticipant : p
+          p.id === currentParticipant.id ? currentParticipant : p
         )
       );
       setIsEditing(false);
