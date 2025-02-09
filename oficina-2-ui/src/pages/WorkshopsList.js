@@ -48,11 +48,14 @@ const WorkshopsList = () => {
 
   const handleSaveEdit = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/workshops/${editingWorkshop.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingWorkshop),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/workshops/${editingWorkshop.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editingWorkshop),
+        }
+      );
 
       if (!response.ok) throw new Error("Erro ao atualizar workshop");
 
@@ -94,7 +97,7 @@ const WorkshopsList = () => {
     setShowParticipantsModal(true);
   };
 
-  // Alterna a seleção de um participante
+  // Alterna a seleção de um participante (pelo seu RA)
   const handleToggleParticipant = (ra) => {
     if (selectedParticipants.includes(ra)) {
       setSelectedParticipants(selectedParticipants.filter((item) => item !== ra));
@@ -105,34 +108,62 @@ const WorkshopsList = () => {
 
   // Salva os participantes selecionados para o workshop
   const handleSaveParticipants = async () => {
+    if (!currentWorkshopForParticipants) return;
+
+    // Os participantes finais desejados serão exatamente os selecionados na modal
+    const finalCount = selectedParticipants.length;
+
+    // Para não enviar participantes já existentes (mantidos) – evitando erro de duplicidade –
+    // filtramos para enviar APENAS os que são novos.
+    const existingRAs = currentWorkshopForParticipants.participantes.map((p) => p.ra);
+    const newRAs = selectedParticipants.filter((ra) => !existingRAs.includes(ra));
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/workshops/participantes/${currentWorkshopForParticipants.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ participantes: selectedParticipants }),
+          // Envia somente os RAs que não estão no workshop (novas adições).
+          body: JSON.stringify({ participantes: newRAs }),
         }
       );
 
-      if (!response.ok) throw new Error("Erro ao atualizar participantes");
+      // Se o número final de participantes ultrapassar o limite,
+      // a API retorna 409. Exibimos a mensagem informando quantos foram escolhidos versus o máximo.
+      if (response.status === 409) {
+        alert(
+          `A escolha ultrapassa o limite de participantes: ${finalCount} (escolhidos) / ${currentWorkshopForParticipants.numeroMaxParticipantes}`
+        );
+        return;
+      }
 
-      // Atualiza o workshop localmente, filtrando os participantes com base na seleção
+      if (!response.ok)
+        throw new Error("Erro ao atualizar participantes");
+
+      // Após a atualização, o workshop deverá ficar com:
+      // • Os participantes que já estavam e foram mantidos (kept)
+      // • Mais os participantes novos que acabamos de adicionar (newRAs)
+      const keptParticipants = currentWorkshopForParticipants.participantes.filter((p) =>
+        selectedParticipants.includes(p.ra)
+      );
+      const newParticipants = participantsList.filter((p) =>
+        newRAs.includes(p.ra)
+      );
       const updatedWorkshop = {
         ...currentWorkshopForParticipants,
-        participantes: participantsList.filter((p) =>
-          selectedParticipants.includes(p.ra)
-        ),
+        participantes: [...keptParticipants, ...newParticipants],
       };
 
+      // Atualiza o workshop na listagem
       setWorkshops(
         workshops.map((w) =>
           w.id === updatedWorkshop.id ? updatedWorkshop : w
         )
       );
       setShowParticipantsModal(false);
-    } catch {
-      alert("Erro ao atualizar participantes");
+    } catch (error) {
+      alert(error.message);
     }
   };
 
