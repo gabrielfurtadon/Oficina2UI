@@ -10,6 +10,9 @@ const WorkshopsList = () => {
   const [expandedWorkshop, setExpandedWorkshop] = useState(null);
   const [editingWorkshop, setEditingWorkshop] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [participants, setParticipants] = useState([]);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
+  const [isManagingParticipants, setIsManagingParticipants] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/workshops`)
@@ -60,6 +63,44 @@ const WorkshopsList = () => {
     }
   };
 
+  const handleManageParticipants = async (workshop) => {
+    setIsManagingParticipants(true);
+    setEditingWorkshop(workshop);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/participantes`);
+      const data = await response.json();
+      setParticipants(data);
+      setSelectedParticipants(workshop.participantes.map(p => p.ra));
+    } catch {
+      alert("Erro ao carregar participantes");
+    }
+  };
+
+  const handleToggleParticipant = (ra) => {
+    setSelectedParticipants(prev =>
+      prev.includes(ra) ? prev.filter(p => p !== ra) : [...prev, ra]
+    );
+  };
+
+  const handleSaveParticipants = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/workshops/participantes/${editingWorkshop.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ participantes: selectedParticipants }),
+      });
+
+      setWorkshops(workshops.map(w =>
+        w.id === editingWorkshop.id ? { ...w, participantes: participants.filter(p => selectedParticipants.includes(p.ra)) } : w
+      ));
+
+      setIsManagingParticipants(false);
+    } catch {
+      alert("Erro ao atualizar participantes");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f1f1f1] flex flex-col items-center justify-center px-4">
       <div className="max-w-3xl w-full bg-white rounded-xl shadow-lg p-8">
@@ -107,6 +148,9 @@ const WorkshopsList = () => {
                   <button onClick={() => handleDelete(workshop.id)} className="text-red-600 hover:text-red-800">
                     <FaTrash />
                   </button>
+                  <button onClick={() => handleManageParticipants(workshop)} className="text-green-600 hover:text-green-800">
+                    <FaUsers />
+                  </button>
                 </div>
               </li>
             ))}
@@ -114,75 +158,28 @@ const WorkshopsList = () => {
         )}
       </div>
 
-      {isEditing && (
+      {isManagingParticipants && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Editar Workshop</h2>
-              <button onClick={() => setIsEditing(false)} className="text-gray-600 hover:text-gray-900">
+              <h2 className="text-xl font-bold">Gerenciar Participantes</h2>
+              <button onClick={() => setIsManagingParticipants(false)} className="text-gray-600 hover:text-gray-900">
                 <FaTimes />
               </button>
             </div>
 
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Título</label>
-                <input
-                  type="text"
-                  name="titulo"
-                  value={editingWorkshop.titulo}
-                  onChange={handleInputChange}
-                  className="block w-full p-2 border rounded-md"
-                />
-              </div>
+            <ul className="space-y-2 max-h-40 overflow-auto">
+              {participants.map((p) => (
+                <li key={p.ra} className="flex items-center space-x-2">
+                  <input type="checkbox" checked={selectedParticipants.includes(p.ra)} onChange={() => handleToggleParticipant(p.ra)} />
+                  <span>{p.name} (RA: {p.ra})</span>
+                </li>
+              ))}
+            </ul>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Descrição</label>
-                <textarea
-                  name="descricao"
-                  value={editingWorkshop.descricao}
-                  onChange={handleInputChange}
-                  className="block w-full p-2 border rounded-md"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Data</label>
-                <input
-                  type="date"
-                  name="data"
-                  value={editingWorkshop.data}
-                  onChange={handleInputChange}
-                  className="block w-full p-2 border rounded-md"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Duração (horas)</label>
-                <input
-                  type="number"
-                  name="duracao"
-                  value={editingWorkshop.duracao}
-                  onChange={handleInputChange}
-                  className="block w-full p-2 border rounded-md"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Número máximo de participantes</label>
-                <input
-                  type="number"
-                  name="numeroMaxParticipantes"
-                  value={editingWorkshop.numeroMaxParticipantes}
-                  onChange={handleInputChange}
-                  className="block w-full p-2 border rounded-md"
-                />
-              </div>
-
-              <button type="button" onClick={handleSaveEdit} className="w-full py-2 bg-[#FFBE00] text-white rounded-md">
-                Salvar
-              </button>
-            </form>
+            <button onClick={handleSaveParticipants} className="w-full py-2 bg-green-500 text-white rounded-md mt-4">
+              <FaCheckSquare className="mr-2" /> Salvar Alterações
+            </button>
           </div>
         </div>
       )}
