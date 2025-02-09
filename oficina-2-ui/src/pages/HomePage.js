@@ -12,18 +12,19 @@ const Homepage = () => {
       id: 1,
       title: "Cadastrar Workshops",
       icon: <FaChalkboardTeacher className="text-3xl" />,
-      description: "Gerencie e organize workshops educacionais"
+      description: "Crie os workshops",
+      action: () => navigate("/cadastrar-workshop"), 
     },
     {
       id: 2,
       title: "Cadastrar Participantes",
       icon: <FaUserPlus className="text-3xl" />,
-      description: "Registre participantes para os workshops",
+      description: "Registre participantes na base",
       action: () => navigate("/cadastrar-participante"), 
     },
     {
       id: 3,
-      title: "Geração de Certificados",
+      title: "Geração de Certificados por Workshop",
       icon: <FaCertificate className="text-3xl" />,
       description: "Emita certificados para os participantes"
     }

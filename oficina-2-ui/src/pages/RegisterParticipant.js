@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUserPlus, FaList, FaSpinner } from "react-icons/fa";
+import { FaArrowLeft, FaUserPlus, FaList, FaSpinner } from "react-icons/fa";
 
 const API_BASE_URL = "http://localhost:8080"; 
 
@@ -55,8 +55,12 @@ const RegisterParticipant = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f1f1] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#f1f1f1] flex flex-col items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <button onClick={() => navigate("/homepage")} className="flex items-center text-[#FFBE00] hover:text-[#e5ab00] mb-4">
+          <FaArrowLeft className="mr-2" /> Voltar
+        </button>
+
         <h2 className="text-3xl font-bold text-[#000000] text-center">Cadastrar Participante</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-6">
