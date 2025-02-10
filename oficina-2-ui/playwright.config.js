@@ -4,7 +4,7 @@ const config = {
     testDir: './src/tests',
     use: {
       baseURL: 'http://localhost:3000',
-      headless: true,
+      headless: false,
     },
     timeout: 30000,
   };

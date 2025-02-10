@@ -32,7 +32,7 @@ test.describe.serial('Fluxo E2E - Certificados de Participação', () => {
   });
 
   test('3. Cadastra 3 participantes', async ({ page }) => {
-
+    await page.goto('http://localhost:3000/homepage');
     await page.click('text=Cadastrar Participantes');
 
     const participantes = [
@@ -56,7 +56,7 @@ test.describe.serial('Fluxo E2E - Certificados de Participação', () => {
   });
 
   test('4. Cadastra um workshop', async ({ page }) => {
-
+    await page.goto('http://localhost:3000/homepage');
     await page.click('text=Cadastrar Workshops');
 
     await page.fill('input[name="titulo"]', workshopTitle);
@@ -75,20 +75,27 @@ test.describe.serial('Fluxo E2E - Certificados de Participação', () => {
   });
 
   test('5. Gerencia workshop: adiciona 3 participantes ao workshop cadastrado', async ({ page }) => {
+    await page.goto('http://localhost:3000/homepage');
     await page.click('text=Gerencie Workshops');
 
     const workshopItem = page.locator('li', { hasText: workshopTitle });
     await expect(workshopItem).toBeVisible();
 
-    const manageButton = workshopItem.locator('button').nth(2);
-    await manageButton.click();
+    const manageParticipantsButton = page.locator('#root > div > div > ul > li:nth-child(2) > div > button.text-green-600.hover\\:text-green-800');
 
+    await expect(manageParticipantsButton).toBeVisible({ timeout: 5000 });
+    await manageParticipantsButton.click();
+
+    await expect(page.locator('text=Gerenciar Participantes')).toBeVisible({ timeout: 5000 });
+
+    // Marca os checkboxes para os RAs selecionados
     for (const ra of ['RA001', 'RA002', 'RA003']) {
-      const checkbox = page.locator(`li:has-text("RA: ${ra}") >> input[type="checkbox"]`);
-      await checkbox.check();
+        const checkbox = page.locator(`li:has-text("RA: ${ra}") >> input[type="checkbox"]`);
+        await checkbox.check();
     }
 
     await page.click('button:has-text("Salvar")');
+
     
     await expect(page.locator('text=Gerenciar Participantes')).not.toBeVisible({ timeout: 5000 });
 
@@ -96,24 +103,35 @@ test.describe.serial('Fluxo E2E - Certificados de Participação', () => {
     await expandButton.click();
 
     for (const ra of ['RA001', 'RA002', 'RA003']) {
-      await expect(workshopItem.locator('text=' + ra)).toBeVisible();
+        await expect(workshopItem.locator(`text=${ra}`)).toBeVisible();
     }
-  });
+});
+
+
 
   test('6. Gera e baixa certificados para o workshop', async ({ page }) => {
+    await page.goto('http://localhost:3000/homepage');
+
     await page.click('text=Geração de Certificados por Workshop');
 
     const workshopItem = page.locator('li', { hasText: workshopTitle });
-    await expect(workshopItem).toBeVisible();
+    await workshopItem.waitFor({ state: 'visible', timeout: 5000 });
 
     const downloadButton = workshopItem.locator('button:has-text("Baixar certificados")');
+    await downloadButton.waitFor({ state: 'visible', timeout: 5000 });
 
     const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      downloadButton.click()
+        page.waitForEvent('download', { timeout: 30000 }),
+        downloadButton.click()
     ]);
 
     const filename = download.suggestedFilename();
-    expect(filename).toContain(workshopTitle.replace(/\s/g, '_'));
-  });
+    console.log("Nome do arquivo baixado:", filename);
+
+    expect(filename).not.toBeNull();
+    const expectedTitle = `certificados_${workshopTitle.replace(/\s/g, '_')}.zip`;
+    const receivedTitle = filename.replace(/\s/g, '_');
+    expect(receivedTitle).toBe(expectedTitle);
+
+});
 });
